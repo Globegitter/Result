@@ -14,7 +14,10 @@ class SuspendableValidationTests {
             val readFooResult = async { resultReadFromAssetFileName("foo.txt") }
             val readBarResult = async { resultReadFromAssetFileName("bar.txt") }
 
-            val validation = SuspendedValidation(readFooResult.await(), readBarResult.await())
+            val validation = SuspendedValidation(
+                readFooResult.await(),
+                readBarResult.await()
+            )
             assertThat("validation.hasFailures", validation.hasFailure, equalTo(false))
             assertThat("validation.failures", validation.failures, equalTo(listOf<Exception>()))
         }
@@ -23,12 +26,41 @@ class SuspendableValidationTests {
     @Test
     fun testSuspendableValidationWithError() {
         runBlocking {
-            val r1 = async { SuspendableResult.of<String, Exception> { readFromAssetFileName("foo.txt") } }
-            val r2 = async { SuspendableResult.of<String, Exception> { throw Exception("Exception r2") } }
-            val r3 = async { SuspendableResult.of<String, Exception> { readFromAssetFileName("bar.txt") } }
-            val r4 = async { SuspendableResult.of<String, Exception> { throw Exception("Exception r4") } }
+            val r1 = async {
+                SuspendableResult.of<String, Exception> {
+                    readFromAssetFileName(
+                        "foo.txt"
+                    )
+                }
+            }
+            val r2 = async {
+                SuspendableResult.of<String, Exception> {
+                    throw Exception(
+                        "Exception r2"
+                    )
+                }
+            }
+            val r3 = async {
+                SuspendableResult.of<String, Exception> {
+                    readFromAssetFileName(
+                        "bar.txt"
+                    )
+                }
+            }
+            val r4 = async {
+                SuspendableResult.of<String, Exception> {
+                    throw Exception(
+                        "Exception r4"
+                    )
+                }
+            }
 
-            val validation = SuspendedValidation(r1.await(), r2.await(), r3.await(), r4.await())
+            val validation = SuspendedValidation(
+                r1.await(),
+                r2.await(),
+                r3.await(),
+                r4.await()
+            )
             assertThat("validation.hasFailures", validation.hasFailure, equalTo(true))
             assertThat("validation.failures", validation.failures.map { it.message }, equalTo(listOf<String?>("Exception r2", "Exception r4")))
         }
